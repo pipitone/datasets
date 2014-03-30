@@ -1,9 +1,14 @@
 datasets
 ========
 
-A tool to manage datasets on a shared filesystem
+A tool to manage datasets on a shared filesystem. 
 
-Install like so: 
+'datasets' is designed to make it easy for users of a shared filesystem to find
+shared datasets and make lightweight (symlinked) copies of datasets to use in
+personal analyses. 'datasets' also tries to keep track of data provenance and
+encourage documentation. 
+
+## Installation
 
 ```bash
 $ git clone https://github.com/pipitone/datasets.git
