@@ -13,13 +13,13 @@ __version__ = '0.1.0'
 
 defaultconfigs = [ os.path.join(sys.path[0],'..','datasets.yml'),
                 '/etc/datasets.yml',
-                '~/.datasets.yml',
+                os.path.expanduser('~/.datasets.yml'),
                 './datasets.yml' ]
 
 class Dataset:
     """Represents a dataset"""
-    def __init__(self, path, basedir = '/'):
-        self.basedir = basedir
+    def __init__(self, path, basedir = None):
+        self.basedir = basedir or os.path.dirname(path)
         self.path = path
         self._info()
 
@@ -28,7 +28,7 @@ class Dataset:
         if not os.path.isfile(readme):
             raise InvalidDatasetException(
                 'Invalid dataset %s. Does not contain a README file.'%self.path)
-
+        
         self.name = os.path.relpath(self.path, self.basedir)
         for i in yaml.safe_load_all(open(readme)):
             if not i.get('dataset'):
@@ -68,7 +68,7 @@ def load_configs(configs):
         try:
             datasets.append(Dataset(i))
         except (InvalidDatasetException):
-            pass
+            pass # TODO: verbose warning
     return {"datasets":datasets}
 
 def get_dataset(path, roots):
@@ -132,6 +132,24 @@ Options:
     if not config["datasets"]:
         print "No datasets found."
         return
+   
+    try:
+        sets = map(lambda x: get_dataset(x, config['datasets']), args['<dataset>'])
+    except InvalidDatasetException, e:
+        print >> sys.stderr, "ERROR: %s" % e
+        sys.exit(-1)
+
+    for ds in sets:
+        rootdir = ds.name
+        os.mkdir(rootdir) 
+        for (path, dirs, files) in os.walk(ds.path):
+            relpath = os.path.relpath(path,ds.path)
+            for f in files: 
+                source = os.path.realpath(os.path.join(ds.basedir,path,f))
+                target = os.path.join(rootdir,relpath,f)
+                os.symlink(source, target)
+            for d in dirs:
+                os.mkdir(os.path.join(rootdir,relpath,d))
 
 
 def main(argv = None):
