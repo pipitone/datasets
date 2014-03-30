@@ -13,7 +13,7 @@ from docopt import docopt
 
 __version__ = '0.1.0'
 
-defaultconfigs = [ os.path.join(sys.path[0],'..','datasets.yml'),
+defaultconfigs = [ os.path.join(sys.path[0],'datasets.yml'),
                 '/etc/datasets.yml',
                 os.path.expanduser('~/.datasets.yml'),
                 './datasets.yml' ]
@@ -43,7 +43,7 @@ class Dataset:
         subfiles = [os.path.join(self.path, i) for i in os.listdir(self.path)]
         for d in [i for i in subfiles if os.path.isdir(i)]:
             try:
-                sub.append(Dataset(d, basedir=os.path.dirname(self.path)))
+                sub.append(Dataset(d, basedir=self.basedir))
             except (InvalidDatasetException):
                 pass
         return sub
@@ -113,9 +113,9 @@ Notes:
 
 """
     def _print_dataset(ds, args):
-        print " - {:<15}     {:<30}".format(ds.name, ds.description)
+        print " - {:<30}     {:<30}".format(ds.name, ds.description)
         if args["--verbose"]:
-            print "   {:<15}     Location: {:<30}".format("", ds.path)
+            print "   {:<30}     Location: {:<30}".format("", ds.path)
         if args["--recursive"]:
             for i in ds.get_subdatasets():
                 _print_dataset(i, args)

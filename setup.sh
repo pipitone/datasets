@@ -4,7 +4,12 @@ set -e
 virtualenv env
 . env/bin/activate
 pip install pyyaml docopt
-ln -s $PWD/datasets.py env/bin/datasets
+cat <<'EOF' > env/bin/datasets
+#!/bin/bash
+
+source $(dirname $0)/activate
+python $(dirname $0)/../../datasets.py "$@"
+EOF 
 
 echo Fetching sample data...
 mkdir -p test/US_crime
