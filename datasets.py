@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
-import os.path
+import re
 import yaml
+import datetime
+import os.path
 import exceptions
 
 from functools import wraps
@@ -30,12 +32,11 @@ class Dataset:
                 'Invalid dataset %s. Does not contain a README file.'%self.path)
         
         self.name = os.path.relpath(self.path, self.basedir)
-        for i in yaml.safe_load_all(open(readme)):
-            if not i.get('dataset'):
-                raise InvalidDatasetException(
-                    "Invalid dataset %s. Expected README YAML frontmatter to have 'dataset: true'." % self.path)
-            self.description = i.get('description', "")
-            break  # only fetch first document
+        doc = yaml_safe_load_first(open(readme))
+        if not doc.get('dataset'):
+            raise InvalidDatasetException(
+                "Invalid dataset %s. Expected README YAML frontmatter to have 'dataset: true'." % self.path)
+        self.description = doc.get('description', "")
 
     def get_subdatasets(self):
         sub = []
@@ -89,7 +90,7 @@ Show a short description for each of the available <dataset>s.
 
 Options:
     <dataset>           Dataset name.
-    -r --recursive      List subdatasets.
+    -r --recursive      List all subdatasets.
     --verbose           Include more detailed descriptions if available.
 """
     def _print_dataset(ds, args):
@@ -121,18 +122,19 @@ Options:
 @argparsed
 def copy(args, config):
     """
-Usage: datasets copy [options] <dataset>...
+Usage: datasets copy[options] <dataset>...
 
 Make a lightweight copy of a <dataset>.
 
 Options:
     <dataset>           Dataset Name
+    -c, --clobber       Clobber existing files [Default: False]
     -n, --dry-run       Show what would happen.
 """
     if not config["datasets"]:
         print "No datasets found."
         return
-   
+  
     try:
         sets = map(lambda x: get_dataset(x, config['datasets']), args['<dataset>'])
     except InvalidDatasetException, e:
@@ -145,27 +147,26 @@ Options:
         for (path, dirs, files) in os.walk(ds.path):
             relpath = os.path.relpath(path,ds.path)
             for f in files: 
-                source = os.path.realpath(os.path.join(ds.basedir,path,f))
+                source = os.path.realpath(os.path.join(ds.path,path,f))
                 target = os.path.join(rootdir,relpath,f)
-                os.symlink(source, target)
+                if relpath == "." and f == 'README': 
+                    frontmatter, rest = get_readme(source)
+                    frontmatter['source'] = ds.path
+                    frontmatter['datecopied'] = datetime.datetime.now()
+                    t = open(target, "w")
+                    t.write(yaml.dump(frontmatter,
+                        explicit_start = True, default_flow_style = False))
+                    t.write('---\n')
+                    t.write(rest)
+                    t.close()
+                else: 
+                    os.symlink(source, target)
             for d in dirs:
                 os.mkdir(os.path.join(rootdir,relpath,d))
 
-
-def main(argv = None):
-    """datasets is a simple utility for discovering datasets and making lightweight
-copies to use in analyses. To get a listing of all of the known datasets, run:
-
-    datasets list
-
-and then use `dataset get <datasetname>` get create a lightweight (i.e. linked)
-copy of the dataset in your current folder.
-
-Datasets can be nested, so to list the datasets contained inside another
-dataset, run:
-
-    datasets list <datasetname>
-
+@argparsed
+def create(args, config): 
+    """
 A dataset itself is simply any folder with specially formatted README file in
 it. The README file must start with the following:
 
@@ -178,6 +179,22 @@ it. The README file must start with the following:
     ---
 
 And may be followed by anything else.
+"""
+    pass
+
+def get_readme(path): 
+    """returns (yamldoc, rest)"""
+    content = open(path).read()
+    match = re.match( r'^(---\s*$.*?^---\s*$)(.*)', content, re.MULTILINE | re.DOTALL )
+    return (yaml_safe_load_first(match.group(1)), match.group(2))
+
+def yaml_safe_load_first(content):
+    for i in yaml.safe_load_all(content):
+        return i
+    
+def main(argv = None):
+    """datasets is a simple utility for discovering datasets and making lightweight
+copies to use in analyses. 
 
 Usage:
     datasets <command> [<options>...]
@@ -188,13 +205,12 @@ General Options:
 
 Commands:
     list             List available datasets.
-    get              Get a lightweight copy of a dataset.
-    create           Create a dataset.
+    copy             Get a lightweight copy of a dataset.
+    create           Create an empty dataset.
+    register         Register a dataset in ~/.datasets.yml.
+    bash_completion  Add bash autocomplete code to your ~/.bashrc
 
 See 'datasets help <command>' for more information on a specific command."""
-
-# get <datasetname>
-#    create [-d <description>] <path>
 
     args = docopt(main.__doc__,
                   version='datasets version %s' % __version__,
