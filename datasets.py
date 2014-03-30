@@ -92,6 +92,25 @@ Options:
     <dataset>           Dataset name.
     -r --recursive      List all subdatasets.
     --verbose           Include more detailed descriptions if available.
+
+Notes: 
+    A dataset is simply a folder that has a README file that begins with: 
+
+        ---
+        dataset: true
+        description: optionally, a description here
+        ---
+
+    You can register datasets by creating a file in ~/.datasets.yml, or
+    ./datasets.yml that starts with the following: 
+
+        ---
+        datasets: 
+            # just include the path to the dataset folder 
+            # NOTE: folder must include a README 
+            - /data/all_nsa_data/
+            - /data/mitt_romney_taxes/
+
 """
     def _print_dataset(ds, args):
         print " - {:<15}     {:<30}".format(ds.name, ds.description)
