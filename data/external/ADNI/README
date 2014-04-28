@@ -1,0 +1,27 @@
+---
+dataset: true
+description: 
+datasets: 
+  - path: images/raw
+    description: ADNI1/GO/2 preprocessed and post-processed data as downloaded
+
+  - path: images/T1
+    description: T1 images only (MINC format)
+
+  - path: images/DTI
+    description: DTI images only (NIFTI format)
+
+  - path: images/ADNI1-baseline
+    description: ADNI1 baseline T1 images only (ADNI Standardized dataset) 
+
+  - path: images/ADNI1-1Yr 
+    description: ADNI1 baseline and 1 year follow up images only 
+
+  - path: MAGeT-HC
+    description: Hippocampal segmentations via MAGeT
+
+  - path: study_data
+    description: all raw subject study data 
+
+  - path: GWAS
+    description: raw genome-wide association study data

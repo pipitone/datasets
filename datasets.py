@@ -20,10 +20,14 @@ defaultconfigs = [ os.path.join(sys.path[0],'datasets.yml'),
 
 class Dataset:
     """Represents a dataset"""
-    def __init__(self, path, basedir = None):
+    def __init__(self, path, basedir = None, description = None):
         self.basedir = basedir or os.path.dirname(path)
         self.path = path
-        self._info()
+        self.name = os.path.relpath(self.path, self.basedir)
+        if description: 
+          self.description = description
+        else: 
+          self._info()
 
     def _info(self):
         readme = os.path.join(self.path,'README')
@@ -31,7 +35,6 @@ class Dataset:
             raise InvalidDatasetException(
                 'Invalid dataset %s. Does not contain a README file.'%self.path)
         
-        self.name = os.path.relpath(self.path, self.basedir)
         doc = yaml_safe_load_first(open(readme))
         if not doc.get('dataset'):
             raise InvalidDatasetException(
@@ -39,14 +42,35 @@ class Dataset:
         self.description = doc.get('description', "")
 
     def get_subdatasets(self):
-        sub = []
+        # get a list of my subfolders
         subfiles = [os.path.join(self.path, i) for i in os.listdir(self.path)]
-        for d in [i for i in subfiles if os.path.isdir(i)]:
+        paths = set([i for i in subfiles if os.path.isdir(i)])
+
+        subdatasets = []
+
+        # check inside my README for subdatasets
+        readme = os.path.join(self.path,'README')
+        if os.path.exists(readme): 
+          doc = yaml_safe_load_first(open(readme))
+          for d in doc.get('datasets',[]):
+              if isinstance(d, str):       # - subdataset
+                  paths.add(os.path.join(self.path,d))
+              elif isinstance(d, dict):    # - path: subdataset
+                                           #   description: description of
+                  path = os.path.join(self.path,d['path'])
+                  try:
+                      subdatasets.append(
+                          Dataset(path, self.basedir, d['description']))                                    
+                  except (InvalidDatasetException):
+                      pass
+                  paths.discard(path)
+        
+        for p in paths:
             try:
-                sub.append(Dataset(d, basedir=self.basedir))
+                subdatasets.append(Dataset(p, basedir=self.basedir))
             except (InvalidDatasetException):
                 pass
-        return sub
+        return subdatasets
 
 class InvalidDatasetException(exceptions.Exception):
     pass
@@ -59,12 +83,19 @@ def argparsed(func):
     return wrapped
 
 def load_configs(configs):
+    datasets = []
     paths = set()
     for i in [f for f in configs if os.path.isfile(f)]:
         for y in yaml.safe_load_all(open(i)):
-            paths.update(set(y.get('datasets',[])))
+            for d in y.get('datasets',[]):        
+                if isinstance(d, str):       # - /path/to/dataset
+                    paths.add(d)
+                elif isinstance(d, dict):    # - path: /path/to/dataset
+                                             #   description: description of
+                    datasets.append(Dataset(d['path'], None, d['description']))                                    
+                    paths.add(d['path'])
+
             break;          # only read the first YAML document per file
-    datasets = []
     for i in paths:
         try:
             datasets.append(Dataset(i))
@@ -126,13 +157,17 @@ Notes:
 
     sets = config['datasets']
     if args['<dataset>']:
-        args['--recursive'] = True
-        try:
-            sets = map(lambda x: get_dataset(x, sets), args['<dataset>'])
-        except InvalidDatasetException, e:
-            print >> sys.stderr, "ERROR: %s" % e
-            sys.exit(-1)
-
+        #args['--recursive'] = True
+        requested_sets = []
+        for i in args['<dataset>']:
+          try:
+              ds = get_dataset(i, sets)
+              requested_sets.append(ds)
+              requested_sets.extend(ds.get_subdatasets())
+          except InvalidDatasetException, e:
+              print >> sys.stderr, "ERROR: %s" % e
+              sys.exit(-1)
+        sets = requested_sets
     print "Datasets:"
     for ds in sets:
         _print_dataset(ds, args)
@@ -250,8 +285,3 @@ See 'datasets help <command>' for more information on a specific command."""
 
 if __name__ == '__main__':
     main()
-
-
-
-
-

@@ -1,0 +1,37 @@
+---
+dataset: true
+description: CAMH DTI study - healthy aging and schizophrenia
+datasets:
+  - path: subject-demographics
+    description: Subject demographic data
+
+  - path: raw
+    description: Raw DICOM images from the scanner
+
+  - path: T1
+    description: T1 contrasts
+
+  - path: DTI
+    description: Diffusion Tensor Images
+
+  - path: FSL-FA
+    description: DTI fractional anisotrophy (FA) maps via FSL
+
+  - path: CIVET
+    description: Cortical thickness and surface maps
+
+  - path: disp_curv
+    description: DTI dispersion and curvature maps
+
+  - path: FLAIR
+    description: FLAIR contrasts
+
+  - path: FSL-TBSS
+    description: DTI tract-based spatial statistics preprocessing files
+
+  - path: MAGeT-HC
+    description: Hippocampal segmentations via MAGeT 
+
+  - path: FSL-FIRST
+    description: Whole-brain T1 segmentations via FSL FIRST
+---

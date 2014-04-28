@@ -1,0 +1,10 @@
+---
+dataset: true
+description: MAGeT-brain hippocampal segmentation
+datasets: 
+  - path: 20130701-ADNI1-bl
+    description: All ADNI1 baseline T1 segmented (V2 Winterburn atlases)
+
+  - path: 20140327-ADNI
+    description: All ADNI T1 images as of 2014-03 (V2 Winterburn atlases)
+---

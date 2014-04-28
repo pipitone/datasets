@@ -1,0 +1,21 @@
+---
+dataset: true
+description: "CAMH or collaborator datasets"
+datasets: 
+  - dti
+  - path: AD-DBS
+    description: "Alzheimer's deep-brain stimulation study"
+  - path: COGBD
+    description: "-"
+  - path: Hillside
+    description: "-"
+  - path: ML_Group
+    description: "-" 
+  - path: NY_Group
+    description: "-"
+  - path: rTMS
+    description: "-"
+  - path: STOP_PD_II
+    description: "-"
+---
+

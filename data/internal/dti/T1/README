@@ -1,0 +1,14 @@
+---
+dataset: true
+description: > 
+  T1-weighted images acquired on blah....
+
+                                        blah blah blah
+
+                                        File naming convention:  
+                                          H indicates control subject
+                                          S indicates Schizophrenia case
+                                          - [H|S]<subjectid>.nii.gz          (1.5T images)
+                                          - CAMH_[H|S]<subjectid>_3T.nii.gz  (3.0T images)
+---
+

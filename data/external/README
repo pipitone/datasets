@@ -1,0 +1,11 @@
+---
+dataset: true
+description: External/public datasets
+datasets: 
+  - path: ADNI
+    description: "Alzheimer's Disease Neuroimaging Initiative"
+  - path: PPMI
+    description: "Parkinson's Progression Markers Initiative"
+  - path: HCP
+    description: "Human Connectome Project"
+---
